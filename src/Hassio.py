@@ -25,7 +25,7 @@ class Hassio:
 		self.payload_available=payload_available;
 		self.payload_not_available=payload_not_available;
 	
-	def addSensor(self,object_id,name,deviceClass,shortStateTopic,valueTemplate,unit_of_measurement):
+	def addSensor(self,object_id,name,deviceClass,shortStateTopic,valueTemplate,unit_of_measurement,stateClass):
 		#build discovery topic
 		discoveryTopic=self.discovery_prefix+'/sensor/'+self.clientId+'/'+object_id+'/config';
 		#build discovery message payload
@@ -34,6 +34,8 @@ class Hassio:
 		payload["unique_id"]=self.clientId+'.'+object_id;
 		if (deviceClass is not None):
 			payload["device_class"]=deviceClass;
+		if (stateClass is not None):
+			payload["state_class"]=stateClass
 		payload["state_topic"]=self.topicRoot+'/'+shortStateTopic;
 		if (valueTemplate is not None):
 			payload["value_template"]=valueTemplate;
