@@ -4,10 +4,14 @@
 import sys,signal,threading
 import configparser
 import logging, logging.config
-import DDModbus,Diematic3Panel,DiematicDeltaPanel,Hassio
+import DDModbus,Diematic3Panel,Diematic4Panel,DiematicDeltaPanel,Hassio
 import paho.mqtt.client as mqtt
 import json
 import time,datetime
+
+
+ONLINE = 'Online'
+OFFLINE = 'Offline'
 
 class MessageBuffer:
 	def __init__(self,mqtt):
@@ -29,28 +33,33 @@ class MessageBuffer:
 			
 	#publish buffer content to MQTT broker	
 	def send(self):
-		#for each topic
-		for topic in self.buffer:
-			if self.buffer[topic]['update']:
-				#send message without trailing / on topic
-				if (topic!=''):
-					self.mqtt.publish(mqttTopicPrefix+'/'+topic,self.buffer[topic]['value'],1,True);
-					self.logger.info('Publish :'+mqttTopicPrefix+'/'+topic+' '+self.buffer[topic]['value'])
-				else:
-					self.mqtt.publish(mqttTopicPrefix,self.buffer[topic]['value'],1,True);
-					self.logger.info('Publish :'+mqttTopicPrefix+' '+self.buffer[topic]['value'])
-				#set the flag to False
-				self.buffer[topic]['update']=False;
+		#if broker connected
+		if self.mqtt.brokerConnected:
+			#for each topic
+			for topic in self.buffer:
+				if self.buffer[topic]['update']:
+					#send message without trailing / on topic
+					if (topic!=''):
+						self.mqtt.publish(mqttTopicPrefix+'/'+topic,self.buffer[topic]['value'],1,True);
+						self.logger.info('Publish :'+mqttTopicPrefix+'/'+topic+' '+self.buffer[topic]['value'])
+					else:
+						self.mqtt.publish(mqttTopicPrefix,self.buffer[topic]['value'],1,True);
+						self.logger.info('Publish :'+mqttTopicPrefix+' '+self.buffer[topic]['value'])
+					#set the flag to False
+					self.buffer[topic]['update']=False;
+		#if broker not connected
+		else:
+			logger.error("Not connected to broker, can't publish messages");
 	
 	
-def diematic3Publish(self):
+def diematicPublish(self):
 	def floatValue(parameter):
 		return (f"{parameter:.1f}" if parameter is not None else '');
 	def intValue(parameter):
 		return (f"{parameter:d}" if parameter is not None else '');
 		
 	#boiler
-	buffer.update('status','Online' if self.availability else 'Offline');
+	buffer.update('status',ONLINE if self.availability else OFFLINE);
 	buffer.update('date',self.datetime.isoformat() if self.datetime is not None else '');
 	buffer.update('lastTimeSync',self.lastTimeSync.isoformat() if self.lastTimeSync is not None else '');
 	buffer.update('type',intValue(self.type));
@@ -101,17 +110,17 @@ def haSendDiscoveryMessages(client, userdata, message):
 		#boiler
 		hassio.addSensor('heater_datetime',"Horloge Chaudière",None,'date',"{{ as_timestamp(value) |timestamp_custom ('%d/%m/%Y %H:%M') }}",None,None);
 		hassio.addSwitch('heater_datetime_set',"Synchro Horloge",'unknown','date/set','--','Now');
-		hassio.addSensor('type',"Type",None,'type',None,None,None);
-		hassio.addSensor('ctrl',"Controleur",None,'ctrl',None,None,None);
-		hassio.addSensor('ext_temp',"Température Extérieure",'temperature','ext/temp',None,"°C","measurement");
-		hassio.addSensor('boiler_temp',"Température Chaudière",'temperature','temp',None,"°C",None);	
-		hassio.addSensor('target_temp',"Température Cible",'temperature','targetTemp',None,"°C",None);
-		hassio.addSensor('return_temp',"Température Retour",'temperature','returnTemp',None,"°C",None);
-		hassio.addSensor('water_pressure',"Pression d'eau",'pressure','waterPressure',None,"bar",None);
-		hassio.addSensor('power',"Puissance",'power_factor','power',None,"%",None);
-		hassio.addSensor('smoke_temp',"Température Fumées",'temperature','smokeTemp',None,"°C",None);
-		hassio.addSensor('ionization_current',"Courant Ionisation",'current','ionizationCurrent',None,"µA",None);	
-		hassio.addSensor('fan_speed',"Vitesse Ventilateur",None,'fanSpeed',None,"RPM",None);	
+		hassio.addSensor('type',"Type",None,'type',None,None);
+		hassio.addSensor('ctrl',"Controleur",None,'ctrl',None,None);
+		hassio.addSensor('ext_temp',"Température Extérieure",'temperature','ext/temp',None,"°C");
+		hassio.addSensor('boiler_temp',"Température Chaudière",'temperature','temp',None,"°C");	
+		hassio.addSensor('target_temp',"Température Cible",'temperature','targetTemp',None,"°C");
+		hassio.addSensor('return_temp',"Température Retour",'temperature','returnTemp',None,"°C");
+		hassio.addSensor('water_pressure',"Pression d'eau",'pressure','waterPressure',None,"bar");
+		hassio.addSensor('power',"Puissance",'power_factor','power',None,"%");
+		hassio.addSensor('smoke_temp',"Température Fumées",'temperature','smokeTemp',None,"°C");
+		hassio.addSensor('ionization_current',"Courant Ionisation",'current','ionizationCurrent',None,None);
+		hassio.addSensor('fan_speed',"Vitesse Ventilateur",None,'fanSpeed',None,"RPM");	
 		hassio.addBinarySensor('burner_status',"Etat Bruleur",None,'burnerStatus',"1","0");	
 		hassio.addSensor('pump_power',"Puissance Pompe",'power_factor','pumpPower',None,"%",None);
 		hassio.addSensor('alarm',"Etat",None,'alarm',"{{ value_json.txt}}",None,None);
@@ -143,12 +152,10 @@ def haSendDiscoveryMessages(client, userdata, message):
 		hassio.addNumber('zone_B_temp_night',"Température Nuit Zone B",'zoneB/nightTemp','zoneB/nightTemp/set',5,30,0.5,"°C");
 		hassio.addNumber('zone_B_temp_antiice',"Température Antigel Zone B",'zoneB/antiiceTemp','zoneB/antiiceTemp/set',5,20,0.5,"°C");		
 		
-		
-		
 	
-def on_connect(client, userdata, flags, rc):		
+def on_connect(client, userdata, flags, reason_code, properties=None):
+	client.brokerConnected=True;
 	logger.critical('Connected to MQTT broker');
-	print('Connected to MQTT broker');
 	#subscribe to control messages with Q0s of 2
 	client.subscribe(mqttTopicPrefix+'/+/+/set',2);
 	client.subscribe(mqttTopicPrefix+'/date/set',2);
@@ -161,7 +168,8 @@ def on_connect(client, userdata, flags, rc):
 
 	
 	
-def on_disconnect(client, userdata, rc):
+def on_disconnect(client, userdata, flags, reason_code, properties=None):
+	client.brokerConnected=False;
 	logger.critical('Diconnected from MQTT broker');
 	
 def modeSet(client, userdata, message):
@@ -296,11 +304,15 @@ if __name__ == '__main__':
 		#init panel
 		if (regulatorType=='DiematicDelta'):
 			logger.critical('Regulator type is Diematic Delta');
-			DiematicDeltaPanel.DiematicDeltaPanel.updateCallback=diematic3Publish;
+			DiematicDeltaPanel.DiematicDeltaPanel.updateCallback=diematicPublish;
 			panel=DiematicDeltaPanel.DiematicDeltaPanel(modbusAddress,int(modbusPort),modbusRegulatorAddress,modbusInterfaceAddress,boilerTimezone,boilerTimeSync);
+		elif (regulatorType=='Diematic4'):
+			logger.critical('Regulator type is Diematic4');
+			Diematic4Panel.Diematic4Panel.updateCallback=diematicPublish;
+			panel=Diematic4Panel.Diematic4Panel(modbusAddress,int(modbusPort),modbusRegulatorAddress,modbusInterfaceAddress,boilerTimezone,boilerTimeSync);
 		else:
 			logger.critical('Regulator type is Diematic3');
-			Diematic3Panel.Diematic3Panel.updateCallback=diematic3Publish;
+			Diematic3Panel.Diematic3Panel.updateCallback=diematicPublish;
 			panel=Diematic3Panel.Diematic3Panel(modbusAddress,int(modbusPort),modbusRegulatorAddress,modbusInterfaceAddress,boilerTimezone,boilerTimeSync);
 		
 		#set refresh period, with a minimum of 10s
@@ -311,7 +323,13 @@ if __name__ == '__main__':
 		panel.forceCircuitB=config.getboolean('Boiler','enable_circuit_B',fallback=False);
 
 		#init mqtt brooker
-		client = mqtt.Client()
+		if 'CallbackAPIVersion' in dir(mqtt):
+			logger.debug('Paho MQTT version 2.XX or more detected, using callback API version2');
+			client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+		else:
+			logger.debug('Paho MQTT version 1.XX detected');
+			client = mqtt.Client()
+
 		client.on_connect = on_connect
 		client.on_disconnect = on_disconnect
 		client.username_pw_set(mqttBrokerLogin,mqttBrokerPassword)
@@ -326,12 +344,14 @@ if __name__ == '__main__':
 		#create HomeAssistant discovery instance
 
 		hassio=Hassio.Hassio(client,mqttTopicPrefix,mqttClientId,hassioDiscoveryPrefix);
-		hassio.availabilityInfo('status','Online','Offline');
+		hassio.availabilityInfo('status',ONLINE,OFFLINE);
+		hassio.setDevice("De Dietrich",regulatorType,mqttClientId)
 	
 		#create mqtt message buffer
 		buffer=MessageBuffer(client);
 		
 		#launch MQTT client
+		client.brokerConnected=False;
 		client.loop_start();
 
 		#start modbus thread

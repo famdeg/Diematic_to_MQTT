@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import logging,json
-	
+
 #This class allow to interface with Home Assistant through the MQTT Discovery Protocol
 class Hassio:
 
@@ -17,6 +17,18 @@ class Hassio:
 		self.topicRoot=topicRoot;
 		self.clientId=clientId;
 		self.discovery_prefix=discovery_prefix;
+		self.device = {
+			"identifiers": [""],
+			"manufacturer": "",
+			"name": ""
+		}
+		
+	def setDevice(self,manufacturer,name,id):
+		self.device = {
+			"identifiers": id,
+			"manufacturer": manufacturer,
+			"name": name
+		}
 	
 	def availabilityInfo(self,shortTopic,payload_available,payload_not_available):
 		#availability info saving
@@ -30,7 +42,7 @@ class Hassio:
 		discoveryTopic=self.discovery_prefix+'/sensor/'+self.clientId+'/'+object_id+'/config';
 		#build discovery message payload
 		payload={"name":name};
-		payload["object_id"]=object_id;
+		payload["default_entity_id"]='sensor.'+object_id;
 		payload["unique_id"]=self.clientId+'.'+object_id;
 		if (deviceClass is not None):
 			payload["device_class"]=deviceClass;
@@ -44,6 +56,7 @@ class Hassio:
 		payload["payload_not_available"]=self.payload_not_available;
 		if (unit_of_measurement is not None):
 			payload["unit_of_measurement"]=unit_of_measurement;
+		payload['device'] = self.device
 		#send discovery message
 		self.mqtt.publish(discoveryTopic,json.dumps(payload),1,False);
 
@@ -52,7 +65,7 @@ class Hassio:
 		discoveryTopic=self.discovery_prefix+'/binary_sensor/'+self.clientId+'/'+object_id+'/config';
 		#build discovery message payload
 		payload={"name":name};
-		payload["object_id"]=object_id;
+		payload["default_entity_id"]='binary_sensor.'+object_id;
 		payload["unique_id"]=self.clientId+'.'+object_id;
 		if (deviceClass is not None):
 			payload["device_class"]=deviceClass;
@@ -63,6 +76,7 @@ class Hassio:
 		payload["payload_available"]=self.payload_available;
 		payload["payload_not_available"]=self.payload_not_available;
 		payload["enabled_by_default"]=False;
+		payload['device'] = self.device
 		#send discovery message
 		self.mqtt.publish(discoveryTopic,json.dumps(payload),1,False);
 	
@@ -71,7 +85,7 @@ class Hassio:
 		discoveryTopic=self.discovery_prefix+'/number/'+self.clientId+'/'+object_id+'/config';
 		#build discovery message payload
 		payload={"name":name};
-		payload["object_id"]=object_id;
+		payload["default_entity_id"]='number.'+object_id;
 		payload["unique_id"]=self.clientId+'.'+object_id;
 		payload["state_topic"]=self.topicRoot+'/'+shortStateTopic;
 		payload["command_topic"]=self.topicRoot+'/'+shortCommandTopic;
@@ -84,6 +98,7 @@ class Hassio:
 		payload["step"]=step;
 		if (unit_of_measurement is not None):
 			payload["unit_of_measurement"]=unit_of_measurement;
+		payload['device'] = self.device
 		#send discovery message
 		self.mqtt.publish(discoveryTopic,json.dumps(payload),1,False);
 		
@@ -92,7 +107,7 @@ class Hassio:
 		discoveryTopic=self.discovery_prefix+'/select/'+self.clientId+'/'+object_id+'/config';
 		#build discovery message payload
 		payload={"name":name};
-		payload["object_id"]=object_id;
+		payload["default_entity_id"]='select.'+object_id;
 		payload["unique_id"]=self.clientId+'.'+object_id;
 		payload["state_topic"]=self.topicRoot+'/'+shortStateTopic;
 		payload["command_topic"]=self.topicRoot+'/'+shortCommandTopic;
@@ -101,7 +116,7 @@ class Hassio:
 		payload["payload_not_available"]=self.payload_not_available;
 		payload["qos"]=2;
 		payload["options"]=options;
-		
+		payload['device'] = self.device
 		#send discovery message
 		self.mqtt.publish(discoveryTopic,json.dumps(payload),1,False);	
 
@@ -110,7 +125,7 @@ class Hassio:
 		discoveryTopic=self.discovery_prefix+'/switch/'+self.clientId+'/'+object_id+'/config';
 		#build discovery message payload
 		payload={"name":name};
-		payload["object_id"]=object_id;
+		payload["default_entity_id"]='switch.'+object_id;
 		payload["unique_id"]=self.clientId+'.'+object_id;
 		if (shortStateTopic is not None):
 			payload["state_topic"]=self.topicRoot+'/'+shortStateTopic;
@@ -121,7 +136,7 @@ class Hassio:
 		payload["payload_off"]=payload_off;
 		payload["payload_on"]=payload_on;		
 		payload["qos"]=2;
-
+		payload['device'] = self.device
 		#send discovery message
 		self.mqtt.publish(discoveryTopic,json.dumps(payload),1,False);		
 
