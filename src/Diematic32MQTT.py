@@ -108,7 +108,7 @@ def haSendDiscoveryMessages(client, userdata, message):
 		logger.info('Sending HA discovery messages');
 		
 		#boiler
-		hassio.addSensor('heater_datetime',"Horloge Chaudière",None,'date',"{{ as_timestamp(value) |timestamp_custom ('%d/%m/%Y %H:%M') }}",None);
+		hassio.addSensor('heater_datetime',"Horloge Chaudière",None,'date',"{{ as_timestamp(value) |timestamp_custom ('%d/%m/%Y %H:%M') }}",None,None);
 		hassio.addSwitch('heater_datetime_set',"Synchro Horloge",'unknown','date/set','--','Now');
 		hassio.addSensor('type',"Type",None,'type',None,None);
 		hassio.addSensor('ctrl',"Controleur",None,'ctrl',None,None);
@@ -122,31 +122,31 @@ def haSendDiscoveryMessages(client, userdata, message):
 		hassio.addSensor('ionization_current',"Courant Ionisation",'current','ionizationCurrent',None,None);
 		hassio.addSensor('fan_speed',"Vitesse Ventilateur",None,'fanSpeed',None,"RPM");	
 		hassio.addBinarySensor('burner_status',"Etat Bruleur",None,'burnerStatus',"1","0");	
-		hassio.addSensor('pump_power',"Puissance Pompe",'power_factor','pumpPower',None,"%");
-		hassio.addSensor('alarm',"Etat",None,'alarm',"{{ value_json.txt}}",None);
-		hassio.addSensor('alarm_id',"N° Erreur",None,'alarm',"{{ value_json.id}}",None);
+		hassio.addSensor('pump_power',"Puissance Pompe",'power_factor','pumpPower',None,"%",None);
+		hassio.addSensor('alarm',"Etat",None,'alarm',"{{ value_json.txt}}",None,None);
+		hassio.addSensor('alarm_id',"N° Erreur",None,'alarm',"{{ value_json.id}}",None,None);
 		
 		#hot water
 		hassio.addBinarySensor('hot_water_pump',"Pompe ECS",None,'hotWater/pump',"1","0");	
-		hassio.addSensor('hot_water_temp',"Température ECS",'temperature','hotWater/temp',None,"°C");
+		hassio.addSensor('hot_water_temp',"Température ECS",'temperature','hotWater/temp',None,"°C",None);
 		hassio.addSelect('hot_water_mode',"Mode ECS",'hotWater/mode','hotWater/mode/set',['AUTO','TEMP','PERM']);
-		hassio.addSensor('hot_water_mode',"Mode ECS",None,'hotWater/mode',None,None);
+		hassio.addSensor('hot_water_mode',"Mode ECS",None,'hotWater/mode',None,None,None);
 		hassio.addNumber('hot_water_temp_day',"Température ECS Jour",'hotWater/dayTemp','hotWater/dayTemp/set',10,80,5,"°C");
 		hassio.addNumber('hot_water_temp_night',"Température ECS Nuit",'hotWater/nightTemp','hotWater/nightTemp/set',10,80,5,"°C");
 		
 		#area A
-		hassio.addSensor('zone_A_temp',"Température Zone A",'temperature','zoneA/temp',None,"°C");
+		hassio.addSensor('zone_A_temp',"Température Zone A",'temperature','zoneA/temp',None,"°C",None);
 		hassio.addSelect('zone_A_mode',"Mode Zone A",'zoneA/mode','zoneA/mode/set',['AUTO','TEMP JOUR','PERM JOUR','TEMP NUIT','PERM NUIT','ANTIGEL']);
-		hassio.addSensor('zone_A_mode',"Mode Zone A",None,'zoneA/mode',None,None);
+		hassio.addSensor('zone_A_mode',"Mode Zone A",None,'zoneA/mode',None,None,None);
 		hassio.addBinarySensor('zone_A_pump',"Pompe Zone A",None,'zoneA/pump',"1","0");
 		hassio.addNumber('zone_A_temp_day',"Température Jour Zone A",'zoneA/dayTemp','zoneA/dayTemp/set',5,30,0.5,"°C");
 		hassio.addNumber('zone_A_temp_night',"Température Nuit Zone A",'zoneA/nightTemp','zoneA/nightTemp/set',5,30,0.5,"°C");
 		hassio.addNumber('zone_A_temp_antiice',"Température Antigel Zone A",'zoneA/antiiceTemp','zoneA/antiiceTemp/set',5,20,0.5,"°C");
 		
 		#area B
-		hassio.addSensor('zone_B_temp',"Température Zone B",'temperature','zoneB/temp',None,"°C");
+		hassio.addSensor('zone_B_temp',"Température Zone B",'temperature','zoneB/temp',None,"°C",None);
 		hassio.addSelect('zone_B_mode',"Mode Zone B",'zoneB/mode','zoneB/mode/set',['AUTO','TEMP JOUR','PERM JOUR','TEMP NUIT','PERM NUIT','ANTIGEL']);
-		hassio.addSensor('zone_B_mode',"Mode Zone B",None,'zoneB/mode',None,None);
+		hassio.addSensor('zone_B_mode',"Mode Zone B",None,'zoneB/mode',None,None,None);
 		hassio.addBinarySensor('zone_B_pump',"Pompe Zone B",None,'zoneB/pump',"1","0");
 		hassio.addNumber('zone_B_temp_day',"Température Jour Zone B",'zoneB/dayTemp','zoneB/dayTemp/set',5,30,0.5,"°C");
 		hassio.addNumber('zone_B_temp_night',"Température Nuit Zone B",'zoneB/nightTemp','zoneB/nightTemp/set',5,30,0.5,"°C");
