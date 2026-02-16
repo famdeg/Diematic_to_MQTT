@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import logging,json
@@ -37,17 +37,15 @@ class Hassio:
 		self.payload_available=payload_available;
 		self.payload_not_available=payload_not_available;
 	
-	def addSensor(self,object_id,name,deviceClass,shortStateTopic,valueTemplate,unit_of_measurement,stateClass):
+	def addSensor(self,object_id,name,deviceClass,shortStateTopic,valueTemplate,unit_of_measurement):
 		#build discovery topic
 		discoveryTopic=self.discovery_prefix+'/sensor/'+self.clientId+'/'+object_id+'/config';
 		#build discovery message payload
 		payload={"name":name};
-		payload["default_entity_id"]='sensor.'+object_id;
+		payload["object_id"]=object_id;
 		payload["unique_id"]=self.clientId+'.'+object_id;
 		if (deviceClass is not None):
 			payload["device_class"]=deviceClass;
-		if (stateClass is not None):
-			payload["state_class"]=stateClass
 		payload["state_topic"]=self.topicRoot+'/'+shortStateTopic;
 		if (valueTemplate is not None):
 			payload["value_template"]=valueTemplate;
@@ -65,7 +63,7 @@ class Hassio:
 		discoveryTopic=self.discovery_prefix+'/binary_sensor/'+self.clientId+'/'+object_id+'/config';
 		#build discovery message payload
 		payload={"name":name};
-		payload["default_entity_id"]='binary_sensor.'+object_id;
+		payload["object_id"]=object_id;
 		payload["unique_id"]=self.clientId+'.'+object_id;
 		if (deviceClass is not None):
 			payload["device_class"]=deviceClass;
@@ -85,7 +83,7 @@ class Hassio:
 		discoveryTopic=self.discovery_prefix+'/number/'+self.clientId+'/'+object_id+'/config';
 		#build discovery message payload
 		payload={"name":name};
-		payload["default_entity_id"]='number.'+object_id;
+		payload["object_id"]=object_id;
 		payload["unique_id"]=self.clientId+'.'+object_id;
 		payload["state_topic"]=self.topicRoot+'/'+shortStateTopic;
 		payload["command_topic"]=self.topicRoot+'/'+shortCommandTopic;
@@ -107,7 +105,7 @@ class Hassio:
 		discoveryTopic=self.discovery_prefix+'/select/'+self.clientId+'/'+object_id+'/config';
 		#build discovery message payload
 		payload={"name":name};
-		payload["default_entity_id"]='select.'+object_id;
+		payload["object_id"]=object_id;
 		payload["unique_id"]=self.clientId+'.'+object_id;
 		payload["state_topic"]=self.topicRoot+'/'+shortStateTopic;
 		payload["command_topic"]=self.topicRoot+'/'+shortCommandTopic;
@@ -125,7 +123,7 @@ class Hassio:
 		discoveryTopic=self.discovery_prefix+'/switch/'+self.clientId+'/'+object_id+'/config';
 		#build discovery message payload
 		payload={"name":name};
-		payload["default_entity_id"]='switch.'+object_id;
+		payload["object_id"]=object_id;
 		payload["unique_id"]=self.clientId+'.'+object_id;
 		if (shortStateTopic is not None):
 			payload["state_topic"]=self.topicRoot+'/'+shortStateTopic;
